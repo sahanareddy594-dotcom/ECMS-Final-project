@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{% if p.status=='Success' %}✅ Payment Successful{% else %}❌ Payment Failed{% endif %}</h2>
+<div class="pay-card">
+  <p><b>Transaction ID:</b> {{ p.txn_id }}</p>
+  <p><b>Amount:</b> ₹{{ "%.2f"|format(p.amount) }}</p>
+  <p><b>Method:</b> {{ p.method }} ({{ p.upi_id }})</p>
+  <p><b>Status:</b>
+    <span class="status {{ 'completed' if p.status=='Success' else 'pending' }}">{{ p.status }}</span></p>
+  <p><b>Note:</b> {{ p.note }}</p>
+  <p><b>Date:</b> {{ p.created_at }}</p>
+  <a href="/transactions"><button>View All Transactions</button></a>
+  <a href="/"><button>Back to Dashboard</button></a>
+</div>
+{% endblock %}

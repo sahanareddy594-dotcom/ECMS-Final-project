@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>🧾 Transaction History</h2>
+{% if rows %}
+<table>
+<tr><th>Txn ID</th><th>From</th><th>To</th><th>Amount</th>
+    <th>Method</th><th>Status</th><th>Date</th><th>Note</th></tr>
+{% for p in rows %}
+<tr>
+  <td>{{ p.txn_id }}</td>
+  <td>{{ p.from_role }}</td>
+  <td>{{ p.to_role }}</td>
+  <td>₹{{ "%.2f"|format(p.amount) }}</td>
+  <td>{{ p.method }}</td>
+  <td><span class="status {{ 'completed' if p.status=='Success' else 'pending' }}">{{ p.status }}</span></td>
+  <td>{{ p.created_at }}</td>
+  <td>{{ p.note }}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}<p>No transactions yet.</p>{% endif %}
+{% endblock %}

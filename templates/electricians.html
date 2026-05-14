@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="content">
+  <h2>Electricians</h2>
+
+  <!-- Add Form (with image upload + UPI) -->
+  <form method="POST" enctype="multipart/form-data" class="filter-box">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="text" name="phone" placeholder="Phone" required>
+    <input type="text" name="experience" placeholder="Experience (e.g. 5 years)" required>
+    <input type="text" name="upi_id" placeholder="UPI ID (name@bank)">
+    <input type="file" name="image" accept="image/*">
+    <button type="submit">Add</button>
+  </form>
+
+  <!-- Table -->
+  <table>
+    <tr>
+      <th>Profile</th><th>Name</th><th>Phone</th><th>Experience</th><th>UPI ID</th>
+    </tr>
+    {% for e in data %}
+    <tr>
+      <td>
+        {% if e.image %}
+          <img class="profile-img" src="{{ url_for('static', filename='uploads/' ~ e.image) }}"
+               style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+        {% else %}
+          <img class="profile-img"
+               src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+               style="width:48px;height:48px;border-radius:50%;">
+        {% endif %}
+      </td>
+      <td>{{ e.name }}</td>
+      <td>{{ e.phone }}</td>
+      <td>{{ e.experience }}</td>
+      <td>{{ e.upi_id or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ECMS — Electrician Contractor Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="sidebar">
+    <h2>⚡ ECMS</h2>
+    <a href="/">🏠 Dashboard</a>
+    {% if session['role'] == 'admin' %}
+        <a href="/electricians">👷 Electricians</a>
+        <a href="/jobs">💼 Jobs</a>
+        <a href="/materials">🧱 Materials</a>
+        <a href="/reports">📊 Reports</a>
+        <a href="/payouts">💸 Payouts</a>
+    {% endif %}
+    {% if session['role'] == 'client' %}
+        <a href="/client">📦 My Jobs</a>
+    {% endif %}
+    {% if session['role'] in ['admin','electrician'] %}
+        <a href="/tasks">📋 Tasks</a>
+    {% endif %}
+    <a href="/transactions">🧾 Transactions</a>
+    <a href="/logout">🚪 Logout</a>
+</div>
+<div class="main">
+    {% with msgs = get_flashed_messages() %}
+      {% if msgs %}<div class="flash">{% for m in msgs %}<p>{{m}}</p>{% endfor %}</div>{% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</div>
+</body>
+</html>

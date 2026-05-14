@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📊 Admin Dashboard</h2>
+<div class="cards">
+    <div class="card blue"><h3>Total Tasks</h3><p>{{ t }}</p></div>
+    <div class="card green"><h3>Completed</h3><p>{{ completed }}</p></div>
+    <div class="card red"><h3>Electricians</h3><p>{{ e }}</p></div>
+    <div class="card purple"><h3>Jobs</h3><p>{{ j }}</p></div>
+    <div class="card teal"><h3>Revenue (₹)</h3><p>{{ "%.2f"|format(revenue) }}</p></div>
+    <div class="card orange"><h3>Payouts (₹)</h3><p>{{ "%.2f"|format(payouts) }}</p></div>
+</div>
+<h3>Task Statistics</h3>
+<div style="max-width:400px;margin:auto;"><canvas id="chart"></canvas></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/api/stats').then(r=>r.json()).then(d=>{
+  new Chart(document.getElementById('chart'),{type:'pie',
+    data:{labels:['Completed','Pending'],datasets:[{data:[d.completed,d.pending],
+    backgroundColor:['#2ecc71','#f39c12']}]},
+    options:{responsive:true}});
+});
+</script>
+{% endblock %}

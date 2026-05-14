@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>📊 Reports Dashboard</h2>
+
+<!-- 🔷 CARDS -->
+<div class="cards">
+
+    <div class="card blue">
+        <h3>Total Tasks</h3>
+        <p>{{ total_tasks }}</p>
+    </div>
+
+    <div class="card green">
+        <h3>Completed Tasks</h3>
+        <p>{{ completed }}</p>
+    </div>
+
+    <div class="card red">
+        <h3>Total Electricians</h3>
+        <p>{{ electricians }}</p>
+    </div>
+
+</div>
+
+<br>
+
+<!-- 🔷 UPLOAD FORM -->
+<h3>📤 Upload Report</h3>
+
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" required>
+    <button type="submit">Upload</button>
+</form>
+
+<br><br>
+
+<!-- 🔷 FILE LIST -->
+<h3>📄 Uploaded Reports</h3>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>ID</th>
+        <th>File</th>
+    </tr>
+
+    {% for r in reports %}
+    <tr>
+        <td>{{ r.id }}</td>
+        <td>
+            <a href="{{ url_for('static', filename='uploads/' + r.filename) }}" target="_blank">
+                View File
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% endblock %}

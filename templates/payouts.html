@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>💸 Pay Electricians</h2>
+
+<form method="POST" class="filter-box">
+  <select name="electrician_id" id="elecSel" required>
+    <option value="">-- Select Electrician --</option>
+    {% for e in electricians %}
+      <option value="{{ e.id }}"
+              data-upi="{{ e.upi_id or '' }}">
+        {{ e.name }}{% if e.upi_id %} ({{ e.upi_id }}){% endif %}
+      </option>
+    {% endfor %}
+  </select>
+
+  <select name="job_id" id="jobSel">
+    <option value="" data-amt="">-- Job (optional) --</option>
+    {% for j in jobs %}
+      <option value="{{ j.id }}" data-amt="{{ j.amount }}">
+        {{ j.title }} (₹{{ j.amount }})
+      </option>
+    {% endfor %}
+  </select>
+
+  <input type="text" name="upi_id" id="upiInp" placeholder="electrician@upi" required>
+  <input type="number" step="0.01" min="1" name="amount" id="amtInp"
+         placeholder="Amount" required>
+  <button type="submit">Send Payout</button>
+</form>
+
+<h3>Recent Payouts</h3>
+<table>
+  <tr><th>Txn</th><th>Amount</th><th>UPI</th><th>Status</th><th>Date</th><th>Note</th></tr>
+  {% for p in payouts %}
+  <tr>
+    <td>{{ p.txn_id }}</td>
+    <td>₹{{ "%.2f"|format(p.amount) }}</td>
+    <td>{{ p.upi_id }}</td>
+    <td><span class="status {{ 'completed' if p.status=='Success' else 'pending' }}">{{ p.status }}</span></td>
+    <td>{{ p.created_at }}</td>
+    <td>{{ p.note }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<script>
+  // Auto-fill UPI when selecting an electrician, and amount when selecting a job
+  const elecSel = document.getElementById('elecSel');
+  const jobSel  = document.getElementById('jobSel');
+  const upiInp  = document.getElementById('upiInp');
+  const amtInp  = document.getElementById('amtInp');
+
+  elecSel.addEventListener('change', () => {
+    const upi = elecSel.options[elecSel.selectedIndex].dataset.upi;
+    if (upi) upiInp.value = upi;
+  });
+  jobSel.addEventListener('change', () => {
+    const amt = jobSel.options[jobSel.selectedIndex].dataset.amt;
+    if (amt) amtInp.value = amt;
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<div class="content">
+    <h2>📋 Tasks Management</h2>
+
+    <!-- FILTER -->
+    <form method="GET" action="/tasks" class="filter-box">
+        <select name="status">
+            <option value="">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+        </select>
+        <button type="submit">Filter</button>
+    </form>
+
+    <!-- ADD TASK (ONLY ADMIN) -->
+    {% if session['role'] == 'admin' %}
+    <form method="POST">
+        <input type="text" name="name" placeholder="Task Name" required>
+
+        <select name="job" required>
+            <option value="">Select Job</option>
+            {% for j in jobs %}
+            <option value="{{ j.id }}">{{ j.title }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="electrician" required>
+            <option value="">Select Electrician</option>
+            {% for e in electricians %}
+            <option value="{{ e.id }}">{{ e.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="status">
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+        </select>
+
+        <button type="submit">Add Task</button>
+    </form>
+    {% endif %}
+
+    <!-- TABLE -->
+    <table>
+        <tr>
+            <th>Task</th>
+            <th>Job</th>
+            <th>Electrician</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+
+        {% for t in data %}
+        <tr>
+            <td>{{ t.name }}</td>
+            <td>🏢 {{ t.jobname }}</td>
+            <td>👷 {{ t.ename }}</td>
+
+            <td>
+                {% if t.status == "Pending" %}
+                    <span class="status pending">Pending</span>
+                {% elif t.status == "In Progress" %}
+                    <span class="status progress">In Progress</span>
+                {% elif t.status == "Completed" %}
+                    <span class="status completed">Completed</span>
+                {% else %}
+                    {{ t.status }}
+                {% endif %}
+            </td>
+
+            <!-- ELECTRICIAN CAN UPDATE -->
+            <td>
+                {% if session['role'] == 'electrician' %}
+                <form action="/update_task" method="POST">
+    <input type="hidden" name="id" value="{{ t.id }}">
+                    <select name="status">
+                        <option>Pending</option>
+                        <option>In Progress</option>
+                        <option>Completed</option>
+                    </select>
+                    <button type="submit">Update</button>
+                </form>
+                {% else %}
+                    ---
+                {% endif %}
+            </td>
+
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+{% endblock %}

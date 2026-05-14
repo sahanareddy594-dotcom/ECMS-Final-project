@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>💳 Pay for Job — {{ job.title }}</h2>
+<div class="pay-card">
+  <p><b>Location:</b> {{ job.location }}</p>
+  <p><b>Deadline:</b> {{ job.deadline }}</p>
+  <p><b>Amount Due:</b> ₹{{ "%.2f"|format(amount or 0) }}</p>
+
+  <div class="pay-tabs" style="margin:15px 0;display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" class="pm-tab active" data-tab="upi">UPI</button>
+    <button type="button" class="pm-tab" data-tab="card">Card</button>
+    <button type="button" class="pm-tab" data-tab="netbank">Net Banking</button>
+    {% if rzp_enabled and rzp_order %}
+      <button type="button" class="pm-tab" data-tab="rzp">Razorpay</button>
+    {% endif %}
+  </div>
+
+  <!-- ============ UPI ============ -->
+  <div class="pm-pane" id="pane-upi">
+    <p style="margin:6px 0 10px;color:#555">Choose your UPI app or enter UPI ID:</p>
+    <div class="upi-apps" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <button type="button" class="upi-app" data-upi="user@okicici">🟢 Google Pay</button>
+      <button type="button" class="upi-app" data-upi="user@ybl">🟣 PhonePe</button>
+      <button type="button" class="upi-app" data-upi="user@paytm">🔵 Paytm</button>
+      <button type="button" class="upi-app" data-upi="user@upi">🟠 BHIM UPI</button>
+      <button type="button" class="upi-app" data-upi="user@axisbank">🔴 Amazon Pay</button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="gateway" value="mock">
+      <label>UPI ID</label>
+      <input type="text" id="upi_id" name="upi_id" placeholder="yourname@upi" required
+             pattern="[A-Za-z0-9._\-]+@[A-Za-z]{2,}">
+      <label>Amount (₹)</label>
+      <input type="number" step="0.01" min="1" name="amount" value="{{ amount or 0 }}" required>
+      <button type="submit" class="btn-primary">Pay ₹{{ "%.2f"|format(amount or 0) }} via UPI</button>
+    </form>
+    <p style="margin-top:10px;color:#888;font-size:12px">
+      Tip: start UPI ID with "fail" (e.g. <code>fail@upi</code>) to simulate a failed payment.
+    </p>
+  </div>
+
+  <!-- ============ CARD ============ -->
+  <div class="pm-pane" id="pane-card" style="display:none">
+    <form method="POST">
+      <input type="hidden" name="gateway" value="mock">
+      <label>Card Number</label>
+      <input type="text" inputmode="numeric" placeholder="4111 1111 1111 1111"
+             pattern="[0-9 ]{13,19}" required>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label>Expiry</label>
+          <input type="text" placeholder="MM/YY" pattern="[0-9]{2}/[0-9]{2}" required></div>
+        <div style="flex:1"><label>CVV</label>
+          <input type="password" placeholder="123" pattern="[0-9]{3,4}" required></div>
+      </div>
+      <label>Name on Card</label>
+      <input type="text" placeholder="Cardholder name" required>
+      <!-- Mock card path reuses the mock gateway with a synthetic upi_id -->
+      <input type="hidden" name="upi_id" value="card@mock">
+      <input type="hidden" name="amount" value="{{ amount or 0 }}">
+      <button type="submit" class="btn-primary">Pay ₹{{ "%.2f"|format(amount or 0) }} with Card</button>
+    </form>
+    <p style="color:#888;font-size:12px;margin-top:8px">Demo only — no real card data is stored.</p>
+  </div>
+
+  <!-- ============ NET BANKING ============ -->
+  <div class="pm-pane" id="pane-netbank" style="display:none">
+    <form method="POST">
+      <input type="hidden" name="gateway" value="mock">
+      <label>Select Bank</label>
+      <select required>
+        <option value="">-- Choose Bank --</option>
+        <option>State Bank of India</option>
+        <option>HDFC Bank</option>
+        <option>ICICI Bank</option>
+        <option>Axis Bank</option>
+        <option>Kotak Mahindra Bank</option>
+        <option>Canara Bank</option>
+      </select>
+      <input type="hidden" name="upi_id" value="netbank@mock">
+      <input type="hidden" name="amount" value="{{ amount or 0 }}">
+      <button type="submit" class="btn-primary" style="margin-top:10px">
+        Pay ₹{{ "%.2f"|format(amount or 0) }} via Net Banking
+      </button>
+    </form>
+  </div>
+
+  {% if rzp_enabled and rzp_order %}
+  <!-- ============ RAZORPAY ============ -->
+  <div class="pm-pane" id="pane-rzp" style="display:none">
+    <p>Pay securely using Razorpay test mode.</p>
+    <button id="rzp-btn" type="button" class="btn-primary">
+      Pay ₹{{ "%.2f"|format(amount) }} with Razorpay
+    </button>
+    <form id="rzp-form" method="POST" style="display:none">
+      <input type="hidden" name="gateway" value="razorpay">
+      <input type="hidden" name="razorpay_order_id"   id="rzp_order_id">
+      <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+      <input type="hidden" name="razorpay_signature"  id="rzp_signature">
+    </form>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      document.getElementById('rzp-btn').onclick = function() {
+        var rzp = new Razorpay({
+          key: "{{ rzp_key }}",
+          amount: {{ rzp_order.amount }},
+          currency: "{{ rzp_order.currency }}",
+          name: "AXILEX ECMS",
+          description: "Payment for {{ job.title|e }}",
+          order_id: "{{ rzp_order.id }}",
+          handler: function (resp) {
+            document.getElementById('rzp_order_id').value   = resp.razorpay_order_id;
+            document.getElementById('rzp_payment_id').value = resp.razorpay_payment_id;
+            document.getElementById('rzp_signature').value  = resp.razorpay_signature;
+            document.getElementById('rzp-form').submit();
+          },
+          theme: { color: "#3498db" }
+        });
+        rzp.open();
+      };
+    </script>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+  .pm-tab{padding:8px 14px;border:1px solid #ccc;background:#f5f5f5;border-radius:6px;cursor:pointer;font-weight:600}
+  .pm-tab.active{background:#3498db;color:#fff;border-color:#3498db}
+  .upi-app{padding:10px 14px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer;font-size:14px}
+  .upi-app:hover{border-color:#3498db;background:#eaf4fb}
+</style>
+<script>
+  document.querySelectorAll('.pm-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.pm-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.pm-pane').forEach(p=>p.style.display='none');
+      document.getElementById('pane-'+btn.dataset.tab).style.display='block';
+    });
+  });
+  document.querySelectorAll('.upi-app').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.getElementById('upi_id').value = b.dataset.upi;
+    });
+  });
+</script>
+{% endblock %}
